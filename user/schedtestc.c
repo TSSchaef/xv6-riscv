@@ -38,21 +38,71 @@ void test1(){
   int r;
   for(i = 1; i < 1000000000; i++){
      if(i % 100000000 == 0){
-        r = getruntime(); 
-        if(getpid() == pid1){
-          printf("Child 1 runtime: %d\n", r);
-        } else{
-          printf("Child 2 runtime: %d\n", r);
-        }
+       printf("");
      }
   }
+
+  r = getruntime(); 
   if(getpid() == pid1){
+    printf("Child 1 runtime: %d\n", r);
     exit(pid1);
+  } else{
+    printf("Child 2 runtime: %d\n", r);
   }
 }
 
 void test2(){
-  printf("Test 2: PASSED\n");
+  printf("Test 2: \n");
+  
+  int p, pid1 = -1;
+  p = fork();
+  if(p < 0){
+    printf("Fork FAILED\n");
+    exit(1);
+  }
+
+  if(p == 0){
+    //child process 1
+    stride(4);
+    pid1 = getpid();
+
+    // long loop
+    long long i;
+    for(i = 1; i < 1000000000; i++){
+      if(i % 100000000 == 0){
+        printf("");
+      }
+    }
+
+  } else {
+    p = fork();
+    if(p < 0){
+      printf("Fork FAILED\n");
+      exit(1);
+    }
+
+    if(p == 0){
+      //child process 2
+      stride(12);
+      // "I/O" loop
+      long long i;
+      for(i = 1; i < 10000; i++){
+        sleep(1);
+      }
+    } else {
+      //parent process
+      exit(getpid());
+    }
+  }
+
+  int r;
+  r = getruntime(); 
+  if(getpid() == pid1){
+    printf("Child 1 runtime: %d\n", r);
+    exit(pid1);
+  } else{
+    printf("Child 2 runtime: %d\n", r);
+  }
 }
 
 int main(int argc, char *argv[]){
