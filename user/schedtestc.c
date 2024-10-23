@@ -5,7 +5,7 @@
 void test1(){
   printf("Test 1: Child 2 should have ~3x more runtime than Child 1\n");
   
-  int p, pid1, pid2;
+  int p, pid1 = -1;
   p = fork();
   if(p < 0){
     printf("Fork FAILED\n");
@@ -27,11 +27,15 @@ void test1(){
     if(p == 0){
       //child process 2
       stride(12);
-      pid2 = getpid();
     } else {
       //parent process
       return;
     }
+  }
+
+  if(pid1 == -1){
+    printf("Didn't get pid1");
+    return;
   }
 
   // long loop
