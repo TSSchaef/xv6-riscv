@@ -39,9 +39,10 @@ void test1(){
   }
 
   // long loop
-  int i, r;
-  for(i = 1; i < 10000000; i++){
-     if(i % 1000000 == 0){
+  long long i;
+  int r;
+  for(i = 1; i < 10000000000; i++){
+     if(i % 1000000000 == 0){
         r = getruntime(); 
         if(getpid() == pid1){
           printf("Child 1 runtime: %d\n", r);
