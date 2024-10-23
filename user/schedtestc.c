@@ -33,16 +33,11 @@ void test1(){
     }
   }
 
-  if(pid1 == -1){
-    printf("Didn't get pid1");
-    exit(getpid());
-  }
-
   // long loop
   long long i;
   int r;
-  for(i = 1; i < 10000000000; i++){
-     if(i % 1000000000 == 0){
+  for(i = 1; i < 1000000000; i++){
+     if(i % 100000000 == 0){
         r = getruntime(); 
         if(getpid() == pid1){
           printf("Child 1 runtime: %d\n", r);
