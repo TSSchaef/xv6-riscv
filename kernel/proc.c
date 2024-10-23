@@ -55,6 +55,8 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
+      //Making sure runtime is set to 0 for new processes
+      p->runtime = 0;
   }
 }
 
@@ -124,6 +126,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  //Making sure runtime is set to 0 for new processes
+  p->runtime = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -514,6 +518,8 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  // Increment runtime each time the process is preempted
+  p->runtime++;
   sched();
   release(&p->lock);
 }
