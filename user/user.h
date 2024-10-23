@@ -22,9 +22,10 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+
 // Added user side functions for system calls
 int getruntime();
-int stride(int pid, int stride);
+int stride(int stride);
 
 // ulib.c
 int stat(const char*, struct stat*);
