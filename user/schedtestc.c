@@ -9,7 +9,7 @@ void test1(){
   p = fork();
   if(p < 0){
     printf("Fork FAILED\n");
-    return;
+    exit(1);
   }
 
   if(p == 0){
@@ -21,7 +21,7 @@ void test1(){
     p = fork();
     if(p < 0){
       printf("Fork FAILED\n");
-      return;
+      exit(1);
     }
 
     if(p == 0){
@@ -29,13 +29,13 @@ void test1(){
       stride(12);
     } else {
       //parent process
-      return;
+      exit(getpid());
     }
   }
 
   if(pid1 == -1){
     printf("Didn't get pid1");
-    return;
+    exit(getpid());
   }
 
   // long loop
@@ -49,6 +49,9 @@ void test1(){
           printf("Child 2 runtime: %d\n", r);
         }
      }
+  }
+  if(getpid() == pid1){
+    exit(pid1);
   }
 }
 
