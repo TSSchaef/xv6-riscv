@@ -101,6 +101,9 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+// Added function headers
+extern uint64 sys_stride(void);
+extern uint64 sys_getruntime(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -126,6 +129,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+// Adding function pointers to syscalls
+[SYS_stride]   sys_stride,
+[SYS_getruntime]   sys_getruntime
 };
 
 void

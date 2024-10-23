@@ -55,8 +55,9 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
-      //Making sure runtime is set to 0 for new processes
+      //Making sure runtime and stride are set to 0 for new processes
       p->runtime = 0;
+      p->stride = 0;
   }
 }
 
@@ -165,6 +166,11 @@ freeproc(struct proc *p)
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
+
+  //Making sure runtime and stride are set to 0 for new processes
+  p->runtime = 0;
+  p->stride = 0;
+
   p->sz = 0;
   p->pid = 0;
   p->parent = 0;

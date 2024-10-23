@@ -20,3 +20,6 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+// Added system call IDss
+#define SYS_stride  22
+#define SYS_getruntime  23

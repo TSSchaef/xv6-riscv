@@ -48,6 +48,30 @@ sys_sbrk(void)
   return addr;
 }
 
+// Added stride function
+// Possibly need to use two parameters and search for correct pid
+// to set stride value of, instructions unclear in spec
+uint64
+sys_stride(void)
+{
+  int s;
+
+  argint(0, &s);
+  if(s < 0) s = 0;
+
+  // setting stride value
+  myproc()->stride = s;
+  return 0;
+}
+
+// Added getruntime function
+uint64
+sys_getruntime(void)
+{
+  // returning runtime
+  return myproc()->runtime;
+}
+
 uint64
 sys_sleep(void)
 {
