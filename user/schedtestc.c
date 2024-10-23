@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "user.h"
 
 void test1(){
   printf("Test 1: PASSED");
