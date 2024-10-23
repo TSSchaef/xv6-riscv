@@ -51,7 +51,7 @@ main()
     case 3:
       scheduler_stride();
       break;
-    defualt:
+    default:
       scheduler();
   }
 }
