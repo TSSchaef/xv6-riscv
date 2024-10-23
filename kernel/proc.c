@@ -26,6 +26,54 @@ extern char trampoline[]; // trampoline.S
 // must be acquired before any p->lock.
 struct spinlock wait_lock;
 
+// Definitions for queue from spec
+#define MAX_UINT64 (-1)
+#define EMPTY MAX_UINT64
+
+// a node of the linked list
+struct qentry {
+uint64 pass; // used by the stride scheduler to keep the list sorted
+uint64 prev; // index of previous qentry in list
+uint64 next; // index of next qentry in list
+};
+
+// a fixed size table where the index of a process in proc[] is the same in qtable[]
+struct qentry qtable[NPROC+2];
+
+// Added functions for queue
+void
+init_queue(void)
+{
+  // Setting up head and tail
+  qtable[NPROC].pass = 0;
+  qtable[NPROC].next = NPROC + 1;
+  qtable[NPROC + 1].pass = MAX_UINT64;
+  qtable[NPROC + 1].prev = NPROC;
+}
+
+// Adds index to end of doubly linked list
+void
+enqueue(int index)
+{
+  qtable[index].prev = qtable[NPROC + 1].prev;
+  qtable[index].next = NPROC + 1;
+  qtable[qtable[NPROC + 1].prev].next = index;
+  qtable[NPROC + 1].prev = index;
+}
+
+// returns index item
+int
+dequeue(void)
+{
+  // return error if head.next is tail
+  if(qtable[NPROC].next == NPROC + 1) return -1;
+
+  int ans = qtable[NPROC].next;
+  qtable[NPROC].next = qtable[qtable[NPROC].next].next;
+  qtable[qtable[NPROC].next].prev = NPROC;
+  return ans;
+}
+
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
