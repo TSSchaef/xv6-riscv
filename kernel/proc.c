@@ -13,6 +13,7 @@ struct proc proc[NPROC];
 struct proc *initproc;
 
 int nextpid = 1;
+int num_intr = 0;
 struct spinlock pid_lock;
 
 extern void forkret(void);
@@ -49,6 +50,14 @@ init_queue(void)
   qtable[NPROC].next = NPROC + 1;
   qtable[NPROC + 1].pass = MAX_UINT64;
   qtable[NPROC + 1].prev = NPROC;
+}
+
+//returns 1 if empty, 0 otherwise
+int
+queue_is_empty(void)
+{
+  if(qtable[NPROC].next == NPROC + 1) return 1;
+  return 0;
 }
 
 // Adds index to end of doubly linked list
@@ -308,6 +317,8 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  // Add to queue
+  enqueue(p - proc);
 
   release(&p->lock);
 }
@@ -378,6 +389,8 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
+  // Add to queue
+  enqueue(np - proc);
   release(&np->lock);
 
   return pid;
@@ -550,6 +563,7 @@ void
 scheduler_rr(void)
 {
   struct proc *p;
+  struct proc *last_p = myproc();
   struct cpu *c = mycpu();
 
   c->proc = 0;
@@ -559,29 +573,43 @@ scheduler_rr(void)
     // processes are waiting.
     intr_on();
 
-    int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
+    // Get next process from queue rather than looping across processes
+    // check the number of interrupts on the last process before getting new 
+    // one. Put old one into queue if getting new one
+    if(num_intr < QUANTA && last_p->state == RUNNABLE){
+      p = last_p;
+    } else {
+      // Add process to queue if RUNNABLE
+      if(last_p->state == RUNNABLE){
+        enqueue(last_p - proc);
       }
-      release(&p->lock);
+
+      // Handle empty queue
+      if(queue_is_empty()){
+        // nothing to run; stop running on this core until an interrupt.
+        intr_on();
+        asm volatile("wfi");
+      }
+      // If there is only 1 process it will be back in the queue to dequeue
+      p = proc + dequeue();
+      // Got new process reset interrupt counter
+      num_intr = 0;
     }
-    if(found == 0) {
-      // nothing to run; stop running on this core until an interrupt.
-      intr_on();
-      asm volatile("wfi");
+
+    acquire(&p->lock);
+    if(p->state == RUNNABLE) {
+      // Switch to chosen process.  It is the process's job
+      // to release its lock and then reacquire it
+      // before jumping back to us.
+      p->state = RUNNING;
+      c->proc = p;
+      swtch(&c->context, &p->context);
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
     }
+    release(&p->lock);
   }
 }
 
@@ -666,6 +694,10 @@ yield(void)
   struct proc *p = myproc();
   acquire(&p->lock);
   p->state = RUNNABLE;
+  // Counting the number of interrupts on this process, reset in scheduer_rr
+  if(SCHEDULER == 2){
+    num_intr++;
+  }
   // Increment runtime each time the process is preempted
   p->runtime++;
   sched();
@@ -739,6 +771,8 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
+        // Add to queue
+        enqueue(p - proc);
       }
       release(&p->lock);
     }
@@ -760,6 +794,8 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
+        // Add to queue
+        enqueue(p - proc);
       }
       release(&p->lock);
       return 0;
