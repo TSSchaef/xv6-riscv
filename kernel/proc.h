@@ -97,6 +97,7 @@ struct proc {
 
   // these are private to the process, so p->lock need not be held.
   uint64 runtime;              // Number of ticks on CPU
+  uint64 pass;                 // pass used for stride scheduler
   int stride;                  // Stride value
   uint64 kstack;               // Virtual address of kernel stack
   uint64 sz;                   // Size of process memory (bytes)

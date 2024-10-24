@@ -70,6 +70,26 @@ enqueue(int index)
   qtable[NPROC + 1].prev = index;
 }
 
+// Adds index to end of doubly linked list
+void
+enqueue_sorted(int index, uint64 pass)
+{
+  //start at head
+  int last_index = NPROC;
+  
+  // cycle through queue until finding spot for pass (sorted)
+  // Can't hit tail because it's pass is the max value
+  while(qtable[qtable[last_index].next].pass <= pass){
+    last_index = qtable[last_index].next;
+  }
+
+  qtable[qtable[last_index].next].prev = index;
+  qtable[index].next = qtable[last_index].next;
+  qtable[last_index].next = index;
+  qtable[index].prev = last_index;
+  qtable[index].pass = pass;
+}
+
 // returns index item
 int
 dequeue(void)
@@ -105,6 +125,9 @@ void
 procinit(void)
 {
   struct proc *p;
+
+  // Added to ensure queue is never used before initialized
+  init_queue();
   
   initlock(&pid_lock, "nextpid");
   initlock(&wait_lock, "wait_lock");
@@ -114,6 +137,7 @@ procinit(void)
       p->kstack = KSTACK((int) (p - proc));
       //Making sure runtime and stride are set to 0 for new processes
       p->runtime = 0;
+      p->pass = 0;
       p->stride = 0;
   }
 }
@@ -186,6 +210,13 @@ found:
   p->state = USED;
   //Making sure runtime is set to 0 for new processes
   p->runtime = 0;
+  p->pass = 0;
+
+  if(!queue_is_empty()){
+    // 3.7.2 Initializing pass 
+    // peeking into head of queue for it's pass
+    p->pass = qtable[qtable[NPROC].next].pass;
+  } 
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -224,9 +255,10 @@ freeproc(struct proc *p)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
 
-  //Making sure runtime and stride are set to 0 for new processes
+  //Making sure runtime, pass, and stride are set to 0 for new processes
   p->runtime = 0;
   p->stride = 0;
+  p->pass = 0;
 
   p->sz = 0;
   p->pid = 0;
@@ -317,8 +349,13 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
-  // Add to queue
-  enqueue(p - proc);
+  // Add to queue, depends on scheduler
+  if(SCHEDULER == 2){
+    enqueue(p - proc);
+  }
+  if(SCHEDULER == 3){
+    enqueue_sorted(p - proc, p->pass);
+  }
 
   release(&p->lock);
 }
@@ -389,8 +426,13 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
-  // Add to queue
-  enqueue(np - proc);
+  // Add to queue, depends on scheduler
+  if(SCHEDULER == 2){
+    enqueue(np - proc);
+  }
+  if(SCHEDULER == 3){
+    enqueue_sorted(np - proc, np->pass);
+  }
   release(&np->lock);
 
   return pid;
@@ -635,28 +677,35 @@ scheduler_stride(void)
     intr_on();
 
     int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
-      }
-      release(&p->lock);
+    // Dequeue to get the process with the smallest pass and run it
+    if(!queue_is_empty()){
+      p = proc + dequeue();
+      //Increment pass
+      p->pass += p->stride;
+      found = 1;
     }
+
     if(found == 0) {
       // nothing to run; stop running on this core until an interrupt.
       intr_on();
       asm volatile("wfi");
     }
+
+    acquire(&p->lock);
+    if(p->state == RUNNABLE) {
+      // Switch to chosen process.  It is the process's job
+      // to release its lock and then reacquire it
+      // before jumping back to us.
+      p->state = RUNNING;
+      c->proc = p;
+      swtch(&c->context, &p->context);
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+    }
+    release(&p->lock);
+
   }
 }
 
@@ -697,6 +746,9 @@ yield(void)
   // Counting the number of interrupts on this process, reset in scheduer_rr
   if(SCHEDULER == 2){
     num_intr++;
+  }
+  if(SCHEDULER == 3){
+    enqueue_sorted(p - proc, p->pass);
   }
   // Increment runtime each time the process is preempted
   p->runtime++;
@@ -771,8 +823,13 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
-        // Add to queue
-        enqueue(p - proc);
+        // Add to queue, depends on scheduler
+        if(SCHEDULER == 2){
+          enqueue(p - proc);
+        }
+        if(SCHEDULER == 3){
+          enqueue_sorted(p - proc, p->pass);
+        }
       }
       release(&p->lock);
     }
@@ -794,8 +851,13 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
-        // Add to queue
-        enqueue(p - proc);
+        // Add to queue, depends on scheduler
+        if(SCHEDULER == 2){
+          enqueue(p - proc);
+        }
+        if(SCHEDULER == 3){
+          enqueue_sorted(p - proc, p->pass);
+        }
       }
       release(&p->lock);
       return 0;
