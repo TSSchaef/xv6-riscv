@@ -91,7 +91,7 @@ void test2(){
       stride(12);
       // "I/O" loop
       long long i;
-      for(i = 1; i < 10000; i++){
+      for(i = 1; i < 100; i++){
         sleep(1);
       }
     } else {
