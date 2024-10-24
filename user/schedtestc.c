@@ -38,7 +38,8 @@ void test1(){
   int r;
   for(i = 1; i < 1000000000; i++){
      if(i % 100000000 == 0){
-       printf("");
+       //Useless print function to avoid error in compilation
+       printf("X\b");
      }
   }
 
@@ -50,6 +51,9 @@ void test1(){
     printf("Child 2 runtime: %d\n", r);
   }
 }
+
+
+
 
 void test2(){
   printf("Test 2: \n");
@@ -70,7 +74,8 @@ void test2(){
     long long i;
     for(i = 1; i < 1000000000; i++){
       if(i % 100000000 == 0){
-        printf("");
+        //Useless print function to avoid error in compilation
+        printf("X\b");
       }
     }
 
