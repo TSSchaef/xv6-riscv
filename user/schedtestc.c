@@ -2,6 +2,13 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
+/*
+ * Used to test scheduler functionalities and see that processes are 
+ * getting the proper runtimes. Can be run inside fo the xv6 shell with
+ * "schedtestc", prints output to the shell terminal
+ */
+
+
 void test1(){
   printf("Test 1: Child 2 should have ~3x more runtime than Child 1\n");
   
