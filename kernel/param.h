@@ -14,5 +14,5 @@
 #define USERSTACK    1     // user stack pages
 
 // pick which scheduler is used, 1 -orig, 2 -rr,  3 -stride
-#define SCHEDULER    1     
+#define SCHEDULER    2     
 #define QUANTA       2     // number of ticks a process runs on the CPU in rr
