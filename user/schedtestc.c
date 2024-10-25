@@ -46,16 +46,16 @@ void test1(){
   for(i = 1; i < 1000000000; i++){
      if(i % 100000000 == 0){
        //Useless print function to avoid error in compilation
-       printf("X\b");
+       r = getruntime(); 
+       if(getpid() == pid1){
+         printf("Child 1 runtime: %d\n", r);
+       } else{
+         printf("Child 2 runtime: %d\n", r);
+       }
      }
   }
-
-  r = getruntime(); 
   if(getpid() == pid1){
-    printf("Child 1 runtime: %d\n", r);
     exit(pid1);
-  } else{
-    printf("Child 2 runtime: %d\n", r);
   }
 }
 
@@ -63,7 +63,7 @@ void test1(){
 
 
 void test2(){
-  printf("Test 2: \n");
+  printf("Test 2: Child 2 is I/O bound, Child 1 is CPU bound \n");
   
   int p, pid1 = -1;
   p = fork();
@@ -82,7 +82,7 @@ void test2(){
     for(i = 1; i < 1000000000; i++){
       if(i % 100000000 == 0){
         //Useless print function to avoid error in compilation
-        printf("X\b");
+        printf("Child 1 runtime: %d\n", getruntime());
       }
     }
 
@@ -100,6 +100,9 @@ void test2(){
       long long i;
       for(i = 1; i < 100; i++){
         sleep(1);
+        if(i % 10 == 0){
+          printf("Child 2 runtime: %d\n", getruntime());
+        }
       }
     } else {
       //parent process
@@ -107,13 +110,8 @@ void test2(){
     }
   }
 
-  int r;
-  r = getruntime(); 
   if(getpid() == pid1){
-    printf("Child 1 runtime: %d\n", r);
     exit(pid1);
-  } else{
-    printf("Child 2 runtime: %d\n", r);
   }
 }
 
