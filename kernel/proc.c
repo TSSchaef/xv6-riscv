@@ -623,7 +623,8 @@ scheduler_rr(void)
       p = last_p;
     } else {
       // Add process to queue if RUNNABLE
-      if(last_p->state == RUNNABLE){
+      // Don't add process to queue twice!
+      if(last_p->state == RUNNABLE && qtable[NPROC + 1].prev != last_p - proc){
         enqueue(last_p - proc);
       }
 
