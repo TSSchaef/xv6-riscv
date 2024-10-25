@@ -605,7 +605,6 @@ void
 scheduler_rr(void)
 {
   struct proc *p;
-  struct proc *last_p = myproc();
   struct cpu *c = mycpu();
 
   c->proc = 0;
@@ -614,6 +613,8 @@ scheduler_rr(void)
     // turned off; enable them to avoid a deadlock if all
     // processes are waiting.
     intr_on();
+    //get the last process to check if it can still run for another tick
+    struct proc *last_p = myproc();
 
     // Get next process from queue rather than looping across processes
     // check the number of interrupts on the last process before getting new 
