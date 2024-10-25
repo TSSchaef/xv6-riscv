@@ -4,3 +4,53 @@ codebase have been done by Tyler Schaefer.
 
 Additional files created:
 "user/schedtestc.c"
+
+
+
+Test Output:
+
+Stride Scheduler:
+Test 1: Child 1 should have ~3x more runtime than Child 2
+Child 1 runtime: 3
+Child 2 runtime: 3
+Child 1 runtime: 7
+Child 1 runtime: 10
+Child 1 runtime: 13
+Child 2 runtime: 6
+Child 1 runtime: 17
+Child 1 runtime: 20
+Child 1 runtime: 23
+Child 2 runtime: 9
+Child 1 runtime: 26
+Child 1 runtime: 29
+Child 2 runtime: 13
+Child 2 runtime: 17
+Child 2 runtime: 20
+Child 2 runtime: 23
+Child 2 runtime: 26
+Child 2 runtime: 29
+
+Test 2: Child 2 is I/O bound, Child 1 is CPU bound
+Child 1 runtime: 3
+Child 1 runtime: 6
+Child 1 runtime: 9
+Child 1 runtime: 12
+Child 1 runtime: 15
+Child 1 runtime: 18
+Child 1 runtime: 22
+Child 1 runtime: 25
+Child 2 runtime: 0
+Child 1 runtime: 28
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+Child 2 runtime: 0
+
+
+This is what we should expect for the stride scheduler. As they are running the
+process with the 3x lower stride gets ~3x more cpu runtime. And the I/O process
+has no runtime because it never gets preemted it always gives up the CPU.

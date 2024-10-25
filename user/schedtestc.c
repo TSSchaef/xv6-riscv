@@ -10,7 +10,7 @@
 
 
 void test1(){
-  printf("Test 1: Child 2 should have ~3x more runtime than Child 1\n");
+  printf("Test 1: Child 1 should have ~3x more runtime than Child 2\n");
   
   int p, pid1 = -1;
   p = fork();
@@ -63,7 +63,7 @@ void test1(){
 
 
 void test2(){
-  printf("Test 2: Child 2 is I/O bound, Child 1 is CPU bound \n");
+  printf("\nTest 2: Child 2 is I/O bound, Child 1 is CPU bound \n");
   
   int p, pid1 = -1;
   p = fork();
