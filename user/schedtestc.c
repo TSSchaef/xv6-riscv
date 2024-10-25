@@ -10,7 +10,7 @@
 
 
 void test1(){
-  printf("Test 1: Child 1 should have ~3x more runtime than Child 2\n");
+  printf("Test 1: Child 1 should have ~3x more runtime than Child 2 (Stride)\n");
   
   int p, pid1 = -1;
   p = fork();

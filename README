@@ -10,7 +10,7 @@ Additional files created:
 Test Output:
 
 Stride Scheduler:
-Test 1: Child 1 should have ~3x more runtime than Child 2
+Test 1: Child 1 should have ~3x more runtime than Child 2 (Stride)
 Child 1 runtime: 3
 Child 2 runtime: 3
 Child 1 runtime: 7
