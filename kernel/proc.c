@@ -689,6 +689,7 @@ scheduler_stride(void)
       // nothing to run; stop running on this core until an interrupt.
       intr_on();
       asm volatile("wfi");
+      continue;
     }
 
     acquire(&p->lock);
