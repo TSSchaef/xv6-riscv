@@ -13,5 +13,6 @@
 #define MAXPATH      128   // maximum file path name
 #define USERSTACK    1     // user stack pages
 
-#define SCHEDULER    3     // pick which scheduler is used
+// pick which scheduler is used, 1 -orig, 2 -rr,  3 -stride
+#define SCHEDULER    1     
 #define QUANTA       2     // number of ticks a process runs on the CPU in rr
