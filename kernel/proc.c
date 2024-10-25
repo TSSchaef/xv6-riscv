@@ -13,7 +13,6 @@ struct proc proc[NPROC];
 struct proc *initproc;
 
 int nextpid = 1;
-int num_intr = 0;
 struct spinlock pid_lock;
 
 extern void forkret(void);
@@ -613,32 +612,18 @@ scheduler_rr(void)
     // turned off; enable them to avoid a deadlock if all
     // processes are waiting.
     intr_on();
-    //get the last process to check if it can still run for another tick
-    struct proc *last_p = myproc();
+
+    // Handle empty queue
+    if(queue_is_empty()){
+      // nothing to run; stop running on this core until an interrupt.
+      intr_on();
+      asm volatile("wfi");
+      continue;
+    }
 
     // Get next process from queue rather than looping across processes
-    // check the number of interrupts on the last process before getting new 
-    // one. Put old one into queue if getting new one
-    if(num_intr < QUANTA && last_p->state == RUNNABLE){
-      p = last_p;
-    } else {
-      // Add process to queue if RUNNABLE
-      // Don't add process to queue twice!
-      if(last_p->state == RUNNABLE && qtable[NPROC + 1].prev != last_p - proc){
-        enqueue(last_p - proc);
-      }
-
-      // Handle empty queue
-      if(queue_is_empty()){
-        // nothing to run; stop running on this core until an interrupt.
-        intr_on();
-        asm volatile("wfi");
-      }
-      // If there is only 1 process it will be back in the queue to dequeue
-      p = proc + dequeue();
-      // Got new process reset interrupt counter
-      num_intr = 0;
-    }
+    // If there is only 1 process it will be back in the queue to dequeue
+    p = proc + dequeue();
 
     acquire(&p->lock);
     if(p->state == RUNNABLE) {
@@ -651,7 +636,7 @@ scheduler_rr(void)
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
-      //c->proc = 0;
+      c->proc = 0;
     }
     release(&p->lock);
   }
@@ -748,7 +733,7 @@ yield(void)
   p->state = RUNNABLE;
   // Counting the number of interrupts on this process, reset in scheduer_rr
   if(SCHEDULER == 2){
-    num_intr++;
+    enqueue(p - proc);
   }
   if(SCHEDULER == 3){
     enqueue_sorted(p - proc, p->pass);
