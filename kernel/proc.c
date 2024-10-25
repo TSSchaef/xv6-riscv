@@ -651,7 +651,7 @@ scheduler_rr(void)
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
-      c->proc = 0;
+      //c->proc = 0;
     }
     release(&p->lock);
   }
